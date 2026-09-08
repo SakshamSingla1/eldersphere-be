@@ -1,0 +1,15 @@
+# Copy this file to application-prod.properties and fill in real values, or (preferred)
+# set the equivalent environment variables referenced in application.properties directly
+# in your deployment platform. application-prod.properties is git-ignored.
+
+app.frontend.url=https://CHANGE_ME.com
+app.url=https://api.CHANGE_ME.com
+
+spring.datasource.url=jdbc:postgresql://CHANGE_ME_HOST:5432/eldersphere?sslmode=require
+spring.datasource.username=CHANGE_ME
+spring.datasource.password=CHANGE_ME
+
+spring.mail.username=CHANGE_ME
+spring.mail.password=CHANGE_ME
+
+jwt.secret=CHANGE_ME_BASE64_SECRET_MIN_32_CHARS

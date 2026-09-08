@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eldersphere-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: eldersphere
+      POSTGRES_USER: eldersphere
+      POSTGRES_PASSWORD: eldersphere_dev_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - eldersphere-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eldersphere -d eldersphere"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Builds this project's own Dockerfile and runs it wired to the postgres service above,
+  # so `docker compose up` from a clean checkout gets a fully working backend (migrations
+  # included - Flyway runs on startup) without anyone needing to export env vars or run
+  # ./mvnw by hand. The frontend is intentionally NOT containerized here (see README) -
+  # run it natively with the Vite dev server, pointed at http://localhost:8080.
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: eldersphere-be:local
+    container_name: eldersphere-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Talks to postgres over the compose network (container-to-container), NOT the
+      # host-published 5434 port used by anything running natively outside this compose.
+      DATABASE_URL: jdbc:postgresql://postgres:5432/eldersphere
+      DATABASE_USER: eldersphere
+      DATABASE_PASSWORD: eldersphere_dev_password
+      # Dev-only default so a clean `docker compose up` just works; override with a real
+      # secret (e.g. `JWT_SECRET=... docker compose up`) for anything beyond local dev.
+      JWT_SECRET: ${JWT_SECRET:-QmmT91Hz/6m0dOZQYJt645GtdxQnJ+yr9DEj3yj6OrI=}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:5174,http://localhost:5173,http://localhost:3000}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+    ports:
+      - "8080:8080"
+    volumes:
+      - eldersphere-uploads:/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  eldersphere-pgdata:
+  eldersphere-uploads:

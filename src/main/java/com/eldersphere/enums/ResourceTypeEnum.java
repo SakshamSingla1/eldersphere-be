@@ -1,0 +1,9 @@
+package com.eldersphere.enums;
+
+public enum ResourceTypeEnum {
+    CARETAKER_PROFILE_PHOTO,
+    CARETAKER_VERIFICATION_DOCUMENT,
+    MEDICAL_RECORD_DOCUMENT,
+    LANDING_TESTIMONIAL_AVATAR,
+    GENERAL
+}
