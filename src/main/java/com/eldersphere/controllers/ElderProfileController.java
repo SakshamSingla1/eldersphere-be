@@ -1,13 +1,17 @@
 package com.eldersphere.controllers;
 
+import com.eldersphere.dtos.Elder.CreateInviteRequest;
 import com.eldersphere.dtos.Elder.ElderProfileRequest;
 import com.eldersphere.dtos.Elder.ElderProfileResponse;
+import com.eldersphere.dtos.Elder.FamilyMemberSummaryDTO;
+import com.eldersphere.dtos.Elder.InviteResponse;
 import com.eldersphere.entities.User;
 import com.eldersphere.enums.UserTypeEnum;
 import com.eldersphere.exceptions.GenericException;
 import com.eldersphere.payload.ApiResponse;
 import com.eldersphere.payload.ResponseModel;
 import com.eldersphere.services.ElderProfileService;
+import com.eldersphere.services.InviteService;
 import com.eldersphere.utils.Helper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +35,7 @@ public class ElderProfileController {
     private static final Set<UserTypeEnum> ADMIN_TIER = EnumSet.of(UserTypeEnum.ADMIN, UserTypeEnum.SUPER_ADMIN);
 
     private final ElderProfileService elderProfileService;
+    private final InviteService inviteService;
     private final Helper helper;
 
     @Operation(summary = "Create elder profile", description = "Called by an ELDER user, creates a self-managed profile (elderUserId = caller). Called by a FAMILY_MEMBER, creates a family-managed profile (familyUserId = caller) as before.")
@@ -85,5 +90,44 @@ public class ElderProfileController {
     public ResponseEntity<ResponseModel<String>> delete(@PathVariable Long id) throws GenericException {
         elderProfileService.delete(id);
         return ApiResponse.successResponse("Elder profile deleted successfully");
+    }
+
+    @Operation(summary = "Invite a user to link with this elder profile", description = "Caller must own or co-manage the profile. invitedRole ELDER links the target as the elder (elderUserId); FAMILY_MEMBER invites them as an additional co-managing family member. The target must accept before any link is created — see InviteController.")
+    @PostMapping("/{id}/invites")
+    public ResponseEntity<ResponseModel<InviteResponse>> createInvite(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateInviteRequest request,
+            @RequestHeader(value = "Authorization", required = false) String auth) throws GenericException {
+        User caller = helper.getUserFromHeader(auth);
+        return ApiResponse.createSuccess(inviteService.createInvite(id, request, caller), "Invite sent successfully");
+    }
+
+    @Operation(summary = "List invites sent for this elder profile")
+    @GetMapping("/{id}/invites")
+    public ResponseEntity<ResponseModel<List<InviteResponse>>> getInvites(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String auth) throws GenericException {
+        User caller = helper.getUserFromHeader(auth);
+        return ApiResponse.successResponse(inviteService.getInvitesForProfile(id, caller), "Invites fetched successfully");
+    }
+
+    @Operation(summary = "List family members linked to this elder profile", description = "Owner plus any accepted co-managing family members.")
+    @GetMapping("/{id}/family-members")
+    public ResponseEntity<ResponseModel<List<FamilyMemberSummaryDTO>>> getFamilyMembers(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String auth) throws GenericException {
+        User caller = helper.getUserFromHeader(auth);
+        return ApiResponse.successResponse(elderProfileService.getFamilyMembers(id, caller), "Family members fetched successfully");
+    }
+
+    @Operation(summary = "Remove a co-managing family member", description = "Owner-only. Does not remove the original profile owner.")
+    @DeleteMapping("/{id}/family-members/{userId}")
+    public ResponseEntity<ResponseModel<String>> removeFamilyMember(
+            @PathVariable Long id,
+            @PathVariable Long userId,
+            @RequestHeader(value = "Authorization", required = false) String auth) throws GenericException {
+        User caller = helper.getUserFromHeader(auth);
+        elderProfileService.removeFamilyMember(id, userId, caller);
+        return ApiResponse.successResponse("Family member removed successfully");
     }
 }

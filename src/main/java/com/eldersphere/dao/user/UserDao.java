@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -46,6 +47,10 @@ public class UserDao implements IDao<User, Long> {
 
     public long countByUserTypeAndStatus(UserTypeEnum userType, UserStatusEnum status) {
         return userRepository.countByUserTypeAndStatus(userType, status);
+    }
+
+    public List<User> searchLinkable(String search, Long excludeUserId, List<UserTypeEnum> types, Pageable pageable) {
+        return userRepository.searchLinkable(search, excludeUserId, types, pageable);
     }
 
     public void deleteById(Long id) {

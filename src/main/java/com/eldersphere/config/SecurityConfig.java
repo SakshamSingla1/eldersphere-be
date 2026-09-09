@@ -92,7 +92,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/**",
                                 "/api/v1/health",
                                 "/api/v1/landing/page",
-                                "/api/v1/search/**",
+                                "/api/v1/search/caretakers",
                                 "/api/v1/services/**",
                                 "/api/v1/push/vapid-public-key"
                         ).permitAll()

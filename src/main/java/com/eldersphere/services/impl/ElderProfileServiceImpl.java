@@ -1,9 +1,13 @@
 package com.eldersphere.services.impl;
 
 import com.eldersphere.dao.elder.ElderProfileDao;
+import com.eldersphere.dao.elder.FamilyElderLinkDao;
+import com.eldersphere.dao.user.UserDao;
 import com.eldersphere.dtos.Elder.ElderProfileRequest;
 import com.eldersphere.dtos.Elder.ElderProfileResponse;
+import com.eldersphere.dtos.Elder.FamilyMemberSummaryDTO;
 import com.eldersphere.entities.ElderProfile;
+import com.eldersphere.entities.FamilyElderLink;
 import com.eldersphere.entities.User;
 import com.eldersphere.enums.ExceptionCodeEnum;
 import com.eldersphere.enums.UserTypeEnum;
@@ -27,6 +31,8 @@ public class ElderProfileServiceImpl implements ElderProfileService {
     private static final Set<UserTypeEnum> ADMIN_TIER = EnumSet.of(UserTypeEnum.ADMIN, UserTypeEnum.SUPER_ADMIN);
 
     private final ElderProfileDao elderProfileDao;
+    private final FamilyElderLinkDao familyElderLinkDao;
+    private final UserDao userDao;
     private final Helper helper;
 
     @Override
@@ -76,7 +82,7 @@ public class ElderProfileServiceImpl implements ElderProfileService {
 
     @Override
     public List<ElderProfileResponse> getByFamilyUserId(Long familyUserId) {
-        return elderProfileDao.findByFamilyUserId(familyUserId).stream()
+        return elderProfileDao.findOwnedOrCoManagedByFamilyUserId(familyUserId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -99,18 +105,69 @@ public class ElderProfileServiceImpl implements ElderProfileService {
         elderProfileDao.deleteById(id);
     }
 
+    @Override
+    public List<FamilyMemberSummaryDTO> getFamilyMembers(Long elderProfileId, User caller) throws GenericException {
+        ElderProfile profile = elderProfileDao.findById(elderProfileId, true);
+        if (profile == null) {
+            throw new GenericException(ExceptionCodeEnum.ELDER_PROFILE_NOT_FOUND, "Elder profile not found");
+        }
+        assertCanAccess(profile, caller);
+
+        List<FamilyMemberSummaryDTO> members = new java.util.ArrayList<>();
+        if (profile.getFamilyUserId() != null) {
+            User owner = userDao.findById(profile.getFamilyUserId(), true);
+            members.add(FamilyMemberSummaryDTO.builder()
+                    .userId(profile.getFamilyUserId())
+                    .fullName(owner != null ? owner.getFullName() : null)
+                    .isOwner(true)
+                    .build());
+        }
+        for (FamilyElderLink link : familyElderLinkDao.findByElderProfileId(elderProfileId)) {
+            User member = userDao.findById(link.getFamilyUserId(), true);
+            members.add(FamilyMemberSummaryDTO.builder()
+                    .userId(link.getFamilyUserId())
+                    .fullName(member != null ? member.getFullName() : null)
+                    .relationshipLabel(link.getRelationshipLabel())
+                    .isOwner(false)
+                    .build());
+        }
+        return members;
+    }
+
+    @Override
+    @Transactional
+    public void removeFamilyMember(Long elderProfileId, Long targetUserId, User caller) throws GenericException {
+        ElderProfile profile = elderProfileDao.findById(elderProfileId, true);
+        if (profile == null) {
+            throw new GenericException(ExceptionCodeEnum.ELDER_PROFILE_NOT_FOUND, "Elder profile not found");
+        }
+        boolean isOwner = profile.getFamilyUserId() != null && Objects.equals(profile.getFamilyUserId(), caller.getId());
+        if (!isOwner && !ADMIN_TIER.contains(caller.getUserType())) {
+            throw new GenericException(ExceptionCodeEnum.FORBIDDEN, "Only the profile owner can remove a family member");
+        }
+        if (!familyElderLinkDao.existsByElderProfileIdAndFamilyUserId(elderProfileId, targetUserId)) {
+            throw new GenericException(ExceptionCodeEnum.DATA_NOT_FOUND, "That user is not a linked family member of this profile");
+        }
+        familyElderLinkDao.deleteByElderProfileIdAndFamilyUserId(elderProfileId, targetUserId);
+    }
+
     /**
-     * Only the linked family_user_id owner, the linked elder_user_id owner,
-     * or an ADMIN/SUPER_ADMIN may read or modify a given elder profile.
+     * Only the linked family_user_id owner, an accepted co-managing family member (see
+     * FamilyElderLink), the linked elder_user_id owner, or an ADMIN/SUPER_ADMIN may read or
+     * modify a given elder profile.
      */
     private void assertCanAccess(ElderProfile profile) throws GenericException {
-        User caller = helper.getAuthenticatedUser();
+        assertCanAccess(profile, helper.getAuthenticatedUser());
+    }
+
+    private void assertCanAccess(ElderProfile profile, User caller) throws GenericException {
         if (ADMIN_TIER.contains(caller.getUserType())) {
             return;
         }
         boolean isFamilyOwner = profile.getFamilyUserId() != null && Objects.equals(profile.getFamilyUserId(), caller.getId());
         boolean isElderOwner = profile.getElderUserId() != null && Objects.equals(profile.getElderUserId(), caller.getId());
-        if (!isFamilyOwner && !isElderOwner) {
+        boolean isCoManagingFamily = familyElderLinkDao.existsByElderProfileIdAndFamilyUserId(profile.getId(), caller.getId());
+        if (!isFamilyOwner && !isElderOwner && !isCoManagingFamily) {
             throw new GenericException(ExceptionCodeEnum.FORBIDDEN, "You do not have access to this elder profile");
         }
     }

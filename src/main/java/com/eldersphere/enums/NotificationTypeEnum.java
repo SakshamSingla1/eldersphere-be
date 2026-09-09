@@ -5,5 +5,8 @@ public enum NotificationTypeEnum {
     BOOKING_REMINDER,
     EMERGENCY_ALERT,
     NEW_MESSAGE,
-    GENERAL
+    GENERAL,
+    ELDER_LINK_INVITE,
+    ELDER_LINK_ACCEPTED,
+    ELDER_LINK_DECLINED
 }

@@ -1,8 +1,10 @@
 package com.eldersphere.services.impl;
 
 import com.eldersphere.dao.booking.BookingDao;
+import com.eldersphere.dao.caretaker.CaretakerAvailabilityDao;
 import com.eldersphere.dao.caretaker.CaretakerProfileDao;
 import com.eldersphere.dao.elder.ElderProfileDao;
+import com.eldersphere.dao.elder.FamilyElderLinkDao;
 import com.eldersphere.dao.emergency.EmergencyAlertDao;
 import com.eldersphere.dao.medicalrecord.MedicalRecordDao;
 import com.eldersphere.dao.notification.NotificationDao;
@@ -24,6 +26,7 @@ import com.eldersphere.enums.ExceptionCodeEnum;
 import com.eldersphere.enums.UserTypeEnum;
 import com.eldersphere.exceptions.GenericException;
 import com.eldersphere.services.DashboardService;
+import com.eldersphere.services.InviteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -47,11 +50,16 @@ public class DashboardServiceImpl implements DashboardService {
 
     private final BookingDao bookingDao;
     private final CaretakerProfileDao caretakerProfileDao;
+    private final CaretakerAvailabilityDao caretakerAvailabilityDao;
     private final EmergencyAlertDao emergencyAlertDao;
     private final ElderProfileDao elderProfileDao;
+    private final FamilyElderLinkDao familyElderLinkDao;
     private final MedicalRecordDao medicalRecordDao;
     private final NotificationDao notificationDao;
     private final UserDao userDao;
+    private final InviteService inviteService;
+
+    private static final int PENDING_INVITES_PREVIEW_LIMIT = 5;
 
     @Override
     public DashboardSummaryDTO getSummary() {
@@ -109,10 +117,16 @@ public class DashboardServiceImpl implements DashboardService {
                 .limit(10)
                 .collect(Collectors.toList());
 
+        long coManagedElderCount = familyElderLinkDao.findByFamilyUserId(familyUserId).size();
+        long pendingInviteCount = inviteService.countPendingForUser(familyUserId);
+
         return FamilyDashboardSummaryDTO.builder()
                 .managedElderCount(managedElders.size())
+                .coManagedElderCount(coManagedElderCount)
                 .upcomingBookings(upcomingBookings)
                 .unreadNotifications(unreadNotifications)
+                .pendingInviteCount(pendingInviteCount)
+                .pendingInvites(inviteService.getPendingSummariesForUser(familyUserId, PENDING_INVITES_PREVIEW_LIMIT))
                 .recentActivities(recentActivities)
                 .build();
     }
@@ -132,11 +146,15 @@ public class DashboardServiceImpl implements DashboardService {
                 .limit(10)
                 .collect(Collectors.toList());
 
+        boolean hasAvailabilitySet = !caretakerAvailabilityDao.findByCaretakerId(profile.getId()).isEmpty();
+
         return CaretakerDashboardSummaryDTO.builder()
                 .upcomingBookings(upcomingBookings)
                 .completedBookings(completedBookings)
                 .averageRating(profile.getRatingAverage())
                 .unreadNotifications(unreadNotifications)
+                .verificationStatus(profile.getVerificationStatus())
+                .hasAvailabilitySet(hasAvailabilitySet)
                 .recentActivities(recentActivities)
                 .build();
     }
@@ -160,6 +178,8 @@ public class DashboardServiceImpl implements DashboardService {
                 .upcomingBookings(upcomingBookings)
                 .activeEmergencyAlerts(activeEmergencyAlerts)
                 .unreadNotifications(unreadNotifications)
+                .pendingInviteCount(inviteService.countPendingForUser(elderUserId))
+                .pendingInvites(inviteService.getPendingSummariesForUser(elderUserId, PENDING_INVITES_PREVIEW_LIMIT))
                 .recentMedicalRecords(recentMedicalRecords)
                 .build();
     }

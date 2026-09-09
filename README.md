@@ -54,6 +54,9 @@ elder-care domain with PostgreSQL and env-var-driven configuration.
 | `EMERGENCY_RESPONSE_SLA_MINUTES` | `5` | Fallback SLA shown if no `PlatformSettings` row exists |
 | `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` | *(generated)* | Base64url (unpadded) VAPID EC key pair used to authenticate outbound Web Push messages. If unset, a fresh key pair is generated at startup and logged at WARN (fine for local dev; production deployments should pin real values so browser subscriptions survive a restart) |
 | `VAPID_SUBJECT` | `mailto:admin@eldersphere.app` | A `mailto:`/`https:` URL identifying the operator, required by the Web Push spec |
+| `SENTRY_DSN` | *(unset)* | Free-tier error tracking (sentry.io) — the starter no-ops entirely when this is blank |
+| `SENTRY_ENVIRONMENT` | `development` | Environment tag attached to reported Sentry events |
+| `GEOCODING_CONTACT_EMAIL` | `admin@eldersphere.app` | Contact identifier sent in the User-Agent header of every OpenStreetMap Nominatim request (their usage policy requires this), see `GeocodingServiceImpl` |
 | `DB_POOL_MAX_SIZE` / `DB_POOL_MIN_IDLE` | `10` / `2` | HikariCP pool sizing |
 
 Uses `hibernate.ddl-auto=validate` + **Flyway** (matching the reference project) — schema is

@@ -30,6 +30,10 @@ public class ElderProfileDao implements IDao<ElderProfile, Long> {
         return elderProfileRepository.findByFamilyUserId(familyUserId);
     }
 
+    public List<ElderProfile> findOwnedOrCoManagedByFamilyUserId(Long familyUserId) {
+        return elderProfileRepository.findOwnedOrCoManagedByFamilyUserId(familyUserId);
+    }
+
     public java.util.Optional<ElderProfile> findByElderUserId(Long elderUserId) {
         return elderProfileRepository.findByElderUserId(elderUserId);
     }

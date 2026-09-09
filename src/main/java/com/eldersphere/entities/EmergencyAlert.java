@@ -34,6 +34,9 @@ public class EmergencyAlert extends Auditable {
 
     private Double longitude;
 
+    @Column(name = "resolved_address", columnDefinition = "TEXT")
+    private String resolvedAddress;
+
     @Enumerated(EnumType.STRING)
     private EmergencyAlertStatusEnum status;
 

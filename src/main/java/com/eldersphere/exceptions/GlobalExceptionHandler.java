@@ -43,7 +43,9 @@ public class GlobalExceptionHandler {
             ExceptionCodeEnum.CARETAKER_UNAVAILABLE,
             ExceptionCodeEnum.USER_ROLE_NOT_HELD,
             ExceptionCodeEnum.CANNOT_DELETE_DEFAULT_COLOR_THEME,
-            ExceptionCodeEnum.COLOR_THEME_INACTIVE
+            ExceptionCodeEnum.COLOR_THEME_INACTIVE,
+            ExceptionCodeEnum.INVITE_ALREADY_RESPONDED,
+            ExceptionCodeEnum.INVALID_INVITE_ROLE
     );
 
     private static final Set<ExceptionCodeEnum> CONFLICT_CODES = Set.of(
@@ -59,7 +61,10 @@ public class GlobalExceptionHandler {
             ExceptionCodeEnum.DUPLICATE_FAVORITE_CARETAKER,
             ExceptionCodeEnum.USER_ROLE_ALREADY_ASSIGNED,
             ExceptionCodeEnum.LAST_USER_ROLE_CANNOT_BE_REVOKED,
-            ExceptionCodeEnum.PRIMARY_USER_ROLE_CANNOT_BE_REVOKED
+            ExceptionCodeEnum.PRIMARY_USER_ROLE_CANNOT_BE_REVOKED,
+            ExceptionCodeEnum.DUPLICATE_INVITE,
+            ExceptionCodeEnum.ELDER_ALREADY_LINKED,
+            ExceptionCodeEnum.FAMILY_MEMBER_ALREADY_LINKED
     );
 
     private static final Set<ExceptionCodeEnum> NOT_FOUND_CODES = Set.of(
@@ -87,7 +92,8 @@ public class GlobalExceptionHandler {
             ExceptionCodeEnum.CARETAKER_AVAILABILITY_NOT_FOUND,
             ExceptionCodeEnum.REVIEW_REPLY_NOT_FOUND,
             ExceptionCodeEnum.FAVORITE_CARETAKER_NOT_FOUND,
-            ExceptionCodeEnum.USER_ROLE_NOT_ASSIGNED
+            ExceptionCodeEnum.USER_ROLE_NOT_ASSIGNED,
+            ExceptionCodeEnum.ELDER_PROFILE_LINK_INVITE_NOT_FOUND
     );
 
     @ExceptionHandler(GenericException.class)

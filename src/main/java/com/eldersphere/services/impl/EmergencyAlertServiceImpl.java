@@ -12,6 +12,7 @@ import com.eldersphere.enums.ExceptionCodeEnum;
 import com.eldersphere.enums.NotificationTypeEnum;
 import com.eldersphere.exceptions.GenericException;
 import com.eldersphere.services.EmergencyAlertService;
+import com.eldersphere.services.GeocodingService;
 import com.eldersphere.services.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ public class EmergencyAlertServiceImpl implements EmergencyAlertService {
     private final EmergencyAlertDao emergencyAlertDao;
     private final ElderProfileDao elderProfileDao;
     private final NotificationService notificationService;
+    private final GeocodingService geocodingService;
 
     @Override
     @Transactional
@@ -38,19 +40,26 @@ public class EmergencyAlertServiceImpl implements EmergencyAlertService {
             throw new GenericException(ExceptionCodeEnum.ELDER_PROFILE_NOT_FOUND, "Elder profile not found");
         }
 
+        // Best-effort reverse geocoding (free OpenStreetMap Nominatim lookup, see
+        // GeocodingServiceImpl) - a slow or failing geocoder must never block triggering the
+        // alert itself, so this always degrades to a null resolvedAddress rather than throwing.
+        String resolvedAddress = geocodingService.reverseGeocode(request.getLatitude(), request.getLongitude());
+
         EmergencyAlert alert = EmergencyAlert.builder()
                 .elderProfileId(request.getElderProfileId())
                 .triggeredByUserId(triggeredByUserId)
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
+                .resolvedAddress(resolvedAddress)
                 .status(EmergencyAlertStatusEnum.TRIGGERED)
                 .triggeredAt(LocalDateTime.now())
                 .build();
         alert = emergencyAlertDao.save(alert);
 
+        String locationSuffix = resolvedAddress != null ? " Last known location: " + resolvedAddress + "." : "";
         notificationService.create(elderProfile.getFamilyUserId(), NotificationTypeEnum.EMERGENCY_ALERT,
                 "Emergency alert triggered",
-                "An emergency alert was triggered for " + elderProfile.getName() + ". Please check on them immediately.",
+                "An emergency alert was triggered for " + elderProfile.getName() + ". Please check on them immediately." + locationSuffix,
                 null);
 
         return toResponse(alert, elderProfile);
@@ -109,6 +118,7 @@ public class EmergencyAlertServiceImpl implements EmergencyAlertService {
         response.setTriggeredByUserId(alert.getTriggeredByUserId());
         response.setLatitude(alert.getLatitude());
         response.setLongitude(alert.getLongitude());
+        response.setResolvedAddress(alert.getResolvedAddress());
         response.setStatus(alert.getStatus());
         response.setRespondingCaretakerId(alert.getRespondingCaretakerId());
         response.setTriggeredAt(alert.getTriggeredAt());
