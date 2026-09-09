@@ -43,10 +43,12 @@ public class CaretakerProfileDao implements IDao<CaretakerProfile, Long> {
     public Page<CaretakerProfile> search(ServiceCategoryEnum category, Double minRating,
                                           CaretakerVerificationStatusEnum verificationStatus,
                                           java.math.BigDecimal minRate, java.math.BigDecimal maxRate,
-                                          String location, Pageable pageable) {
+                                          String location, String query, Pageable pageable) {
         String locationPattern = (location != null && !location.isBlank())
                 ? "%" + location.toLowerCase() + "%" : null;
-        return caretakerProfileRepository.search(category, minRating, verificationStatus, minRate, maxRate, locationPattern, pageable);
+        String queryPattern = (query != null && !query.isBlank())
+                ? "%" + query.toLowerCase() + "%" : null;
+        return caretakerProfileRepository.search(category, minRating, verificationStatus, minRate, maxRate, locationPattern, queryPattern, pageable);
     }
 
     public java.util.List<Object[]> leaderboardRaw() {

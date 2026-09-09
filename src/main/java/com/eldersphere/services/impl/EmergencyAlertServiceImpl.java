@@ -1,7 +1,11 @@
 package com.eldersphere.services.impl;
 
+import com.eldersphere.dao.caretaker.CaretakerProfileDao;
 import com.eldersphere.dao.elder.ElderProfileDao;
 import com.eldersphere.dao.emergency.EmergencyAlertDao;
+import com.eldersphere.dao.user.UserDao;
+import com.eldersphere.entities.CaretakerProfile;
+import com.eldersphere.entities.User;
 import com.eldersphere.dtos.Emergency.EmergencyAlertRequest;
 import com.eldersphere.dtos.Emergency.EmergencyAlertResponse;
 import com.eldersphere.dtos.Emergency.EmergencyAlertUpdateRequest;
@@ -29,6 +33,8 @@ public class EmergencyAlertServiceImpl implements EmergencyAlertService {
 
     private final EmergencyAlertDao emergencyAlertDao;
     private final ElderProfileDao elderProfileDao;
+    private final CaretakerProfileDao caretakerProfileDao;
+    private final UserDao userDao;
     private final NotificationService notificationService;
     private final GeocodingService geocodingService;
 
@@ -121,11 +127,20 @@ public class EmergencyAlertServiceImpl implements EmergencyAlertService {
         response.setResolvedAddress(alert.getResolvedAddress());
         response.setStatus(alert.getStatus());
         response.setRespondingCaretakerId(alert.getRespondingCaretakerId());
+        response.setRespondingCaretakerName(resolveCaretakerName(alert.getRespondingCaretakerId()));
         response.setTriggeredAt(alert.getTriggeredAt());
         response.setResolvedAt(alert.getResolvedAt());
         response.setResponseTimeSeconds(alert.getResponseTimeSeconds());
         response.setCreatedAt(alert.getCreatedAt());
         response.setUpdatedAt(alert.getUpdatedAt());
         return response;
+    }
+
+    private String resolveCaretakerName(Long respondingCaretakerId) {
+        if (respondingCaretakerId == null) return null;
+        CaretakerProfile profile = caretakerProfileDao.findById(respondingCaretakerId, true);
+        if (profile == null) return null;
+        User user = userDao.findById(profile.getUserId(), true);
+        return user != null ? user.getFullName() : null;
     }
 }

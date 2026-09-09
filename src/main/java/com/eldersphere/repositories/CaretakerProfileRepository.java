@@ -24,12 +24,17 @@ public interface CaretakerProfileRepository extends JpaRepository<CaretakerProfi
     @Query("""
             SELECT DISTINCT c FROM CaretakerProfile c
             LEFT JOIN c.specialties s
+            JOIN User u ON u.id = c.userId
             WHERE (:category IS NULL OR s = :category)
             AND (:minRating IS NULL OR c.ratingAverage >= :minRating)
             AND (:verificationStatus IS NULL OR c.verificationStatus = :verificationStatus)
             AND (:minRate IS NULL OR c.hourlyRate >= :minRate)
             AND (:maxRate IS NULL OR c.hourlyRate <= :maxRate)
             AND (:locationPattern IS NULL OR LOWER(c.serviceArea) LIKE :locationPattern)
+            AND (:queryPattern IS NULL
+                OR LOWER(u.fullName) LIKE :queryPattern
+                OR LOWER(u.email) LIKE :queryPattern
+                OR u.phone LIKE :queryPattern)
             """)
     Page<CaretakerProfile> search(@Param("category") ServiceCategoryEnum category,
                                    @Param("minRating") Double minRating,
@@ -37,6 +42,7 @@ public interface CaretakerProfileRepository extends JpaRepository<CaretakerProfi
                                    @Param("minRate") java.math.BigDecimal minRate,
                                    @Param("maxRate") java.math.BigDecimal maxRate,
                                    @Param("locationPattern") String locationPattern,
+                                   @Param("queryPattern") String queryPattern,
                                    Pageable pageable);
 
     /**

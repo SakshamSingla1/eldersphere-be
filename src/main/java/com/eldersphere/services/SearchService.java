@@ -16,7 +16,7 @@ public interface SearchService {
     Page<CaretakerSearchResultDTO> searchCaretakers(ServiceCategoryEnum category, Double minRating,
                                                       CaretakerVerificationStatusEnum verificationStatus,
                                                       BigDecimal minRate, BigDecimal maxRate, String location,
-                                                      Pageable pageable);
+                                                      String query, Pageable pageable);
 
     List<UserLinkSearchResultDTO> searchLinkableUsers(String query, UserTypeEnum userType, User caller);
 }

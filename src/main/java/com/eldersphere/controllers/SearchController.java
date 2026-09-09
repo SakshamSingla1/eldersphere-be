@@ -47,7 +47,7 @@ public class SearchController {
         return ApiResponse.successResponse(searchService.searchLinkableUsers(query, userType, caller), "Users fetched successfully");
     }
 
-    @Operation(summary = "Search caretakers")
+    @Operation(summary = "Search caretakers", description = "Filter by category/rating/price/location as before, and/or free-text `query` matching the caretaker's name, email, or phone (e.g. for an admin \"assign responding caretaker\" picker).")
     @GetMapping("/caretakers")
     public ResponseEntity<ResponseModel<Page<CaretakerSearchResultDTO>>> searchCaretakers(
             @RequestParam(required = false) ServiceCategoryEnum category,
@@ -56,9 +56,10 @@ public class SearchController {
             @RequestParam(required = false) BigDecimal minRate,
             @RequestParam(required = false) BigDecimal maxRate,
             @RequestParam(required = false) String location,
+            @RequestParam(required = false) String query,
             Pageable pageable) {
         Page<CaretakerSearchResultDTO> response = searchService.searchCaretakers(category, minRating, verificationStatus,
-                minRate, maxRate, location, pageable);
+                minRate, maxRate, location, query, pageable);
         return ApiResponse.successResponse(response, "Caretakers fetched successfully");
     }
 }

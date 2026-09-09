@@ -19,6 +19,7 @@ public class EmergencyAlertResponse extends AuditableResponse {
     private String resolvedAddress;
     private EmergencyAlertStatusEnum status;
     private Long respondingCaretakerId;
+    private String respondingCaretakerName;
     private LocalDateTime triggeredAt;
     private LocalDateTime resolvedAt;
     private Integer responseTimeSeconds;

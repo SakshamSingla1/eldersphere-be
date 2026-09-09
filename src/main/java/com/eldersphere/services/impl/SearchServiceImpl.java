@@ -38,10 +38,11 @@ public class SearchServiceImpl implements SearchService {
     public Page<CaretakerSearchResultDTO> searchCaretakers(ServiceCategoryEnum category, Double minRating,
                                                              CaretakerVerificationStatusEnum verificationStatus,
                                                              BigDecimal minRate, BigDecimal maxRate, String location,
-                                                             Pageable pageable) {
+                                                             String query, Pageable pageable) {
         String normalizedLocation = (location != null && !location.isBlank()) ? location.trim() : null;
+        String normalizedQuery = (query != null && !query.isBlank()) ? query.trim() : null;
         Page<CaretakerProfile> page = caretakerProfileDao.search(category, minRating, verificationStatus,
-                minRate, maxRate, normalizedLocation, pageable);
+                minRate, maxRate, normalizedLocation, normalizedQuery, pageable);
         return page.map(this::toResult);
     }
 
