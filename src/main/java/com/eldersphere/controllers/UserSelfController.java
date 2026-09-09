@@ -96,6 +96,23 @@ public class UserSelfController {
         return ApiResponse.successResponse(null, "Push subscription removed successfully");
     }
 
+    @Operation(summary = "Get my active color theme", description = "Always resolves to a concrete palette - the caller's own pick if it still exists and is ACTIVE, otherwise the current default theme (usingDefault=true in that case).")
+    @GetMapping("/theme")
+    public ResponseEntity<ResponseModel<UserThemeResponseDTO>> getMyTheme(
+            @RequestHeader(value = "Authorization", required = false) String auth) throws GenericException {
+        Long userId = helper.getUserIdFromHeader(auth);
+        return ApiResponse.successResponse(userThemeService.getMyTheme(userId), "Active theme fetched successfully");
+    }
+
+    @Operation(summary = "Set my active color theme", description = "Body { \"themeId\": ... }; pass null to reset to the default theme. Rejects an unknown or INACTIVE theme id.")
+    @PutMapping("/theme")
+    public ResponseEntity<ResponseModel<UserThemeResponseDTO>> setMyTheme(
+            @RequestHeader(value = "Authorization", required = false) String auth,
+            @RequestBody UserThemeUpdateRequest request) throws GenericException {
+        Long userId = helper.getUserIdFromHeader(auth);
+        return ApiResponse.successResponse(userThemeService.setMyTheme(userId, request.getThemeId()), "Active theme updated successfully");
+    }
+
     @Operation(summary = "Export my data", description = "Download-my-data: a JSON dump of the caller's own profile, bookings, reviews, medical records, and notifications.")
     @GetMapping("/export")
     public ResponseEntity<ResponseModel<UserDataExportResponse>> exportMyData(

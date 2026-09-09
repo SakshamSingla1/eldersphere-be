@@ -15,6 +15,7 @@ import com.eldersphere.security.JwtUtil;
 import com.eldersphere.services.AuthService;
 import com.eldersphere.services.EmailService;
 import com.eldersphere.services.UserRoleService;
+import com.eldersphere.services.UserThemeService;
 import com.eldersphere.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final Helper helper;
     private final UserRoleService userRoleService;
+    private final UserThemeService userThemeService;
 
     @Value("${app.password-reset.token-expiry-minutes}")
     private int passwordResetExpiryMinutes;
@@ -123,6 +125,7 @@ public class AuthServiceImpl implements AuthService {
                 .roleName(roleName)
                 .roles(roleTypes)
                 .token(token)
+                .activeTheme(userThemeService.getMyTheme(user.getId()))
                 .build();
     }
 
