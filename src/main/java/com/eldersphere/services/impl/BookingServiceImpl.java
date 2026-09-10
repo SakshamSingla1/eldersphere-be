@@ -153,7 +153,10 @@ public class BookingServiceImpl implements BookingService {
 
         DayOfWeekEnum dayOfWeek = DayOfWeekEnum.valueOf(date.getDayOfWeek().name());
         List<CaretakerAvailability> slots = caretakerAvailabilityDao.findByCaretakerId(caretakerId);
-        boolean withinAvailability = slots.stream().anyMatch(slot ->
+        // A caretaker who hasn't declared any weekly availability yet (e.g. right after
+        // verification) isn't restricted to zero bookable hours - treat "nothing declared" as
+        // "always available" rather than rejecting every slot forever.
+        boolean withinAvailability = slots.isEmpty() || slots.stream().anyMatch(slot ->
                 slot.getDayOfWeek() == dayOfWeek
                         && !startTime.isBefore(slot.getStartTime())
                         && !endTime.isAfter(slot.getEndTime()));
