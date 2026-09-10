@@ -42,6 +42,10 @@ public class ElderProfileDao implements IDao<ElderProfile, Long> {
         return elderProfileRepository.findByFamilyUserId(familyUserId, pageable);
     }
 
+    public Page<ElderProfile> searchByName(String name, Pageable pageable) {
+        return elderProfileRepository.findByNameContainingIgnoreCase(name, pageable);
+    }
+
     public void deleteById(Long id) {
         elderProfileRepository.deleteById(id);
     }

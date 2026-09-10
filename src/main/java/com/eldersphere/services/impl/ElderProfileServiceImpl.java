@@ -15,6 +15,8 @@ import com.eldersphere.exceptions.GenericException;
 import com.eldersphere.services.ElderProfileService;
 import com.eldersphere.utils.Helper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,6 +94,11 @@ public class ElderProfileServiceImpl implements ElderProfileService {
         ElderProfile profile = elderProfileDao.findByElderUserId(elderUserId)
                 .orElseThrow(() -> new GenericException(ExceptionCodeEnum.ELDER_PROFILE_NOT_FOUND, "Elder profile not found"));
         return toResponse(profile);
+    }
+
+    @Override
+    public Page<ElderProfileResponse> searchByName(String query, Pageable pageable) {
+        return elderProfileDao.searchByName(query, pageable).map(this::toResponse);
     }
 
     @Override

@@ -16,6 +16,11 @@ public interface ElderProfileRepository extends JpaRepository<ElderProfile, Long
     Page<ElderProfile> findByFamilyUserId(Long familyUserId, Pageable pageable);
     java.util.Optional<ElderProfile> findByElderUserId(Long elderUserId);
 
+    // Backs the admin "find an elder profile by name" picker (Admin > Elder Profiles,
+    // Admin > Medical Records) — there's no admin "list all" endpoint, so this is the only
+    // way an admin can locate a profile without already knowing its numeric ID.
+    Page<ElderProfile> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
     // Profiles a family member either owns (family_user_id) or co-manages via an accepted
     // FamilyElderLink — see FamilyElderLink for why that's a separate join table rather than
     // a second scalar column on elder_profiles.

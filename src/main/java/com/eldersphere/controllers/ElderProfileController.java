@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -74,6 +76,14 @@ public class ElderProfileController {
     @GetMapping("/{id}")
     public ResponseEntity<ResponseModel<ElderProfileResponse>> getById(@PathVariable Long id) throws GenericException {
         return ApiResponse.successResponse(elderProfileService.getById(id), "Elder profile fetched successfully");
+    }
+
+    @Operation(summary = "Search elder profiles by name (admin)", description = "There's no admin \"list all\" endpoint for elder profiles, so admin pickers (Elder Profile Lookup, Medical Records) that need to find a profile by name instead of its numeric ID call this.")
+    @PreAuthorize("isAuthenticated() and @adminPermissionGuard.has('ELDER_PROFILES_VIEW')")
+    @GetMapping("/search")
+    public ResponseEntity<ResponseModel<Page<ElderProfileResponse>>> search(
+            @RequestParam String query, Pageable pageable) {
+        return ApiResponse.successResponse(elderProfileService.searchByName(query, pageable), "Elder profiles fetched successfully");
     }
 
     @Operation(summary = "List my elders", description = "Lists all elder profiles managed by the logged-in family member.")
