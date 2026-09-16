@@ -5,11 +5,13 @@ import com.eldersphere.entities.Message;
 import com.eldersphere.repositories.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
@@ -28,6 +30,11 @@ public class MessageDao implements IDao<Message, Long> {
 
     public Page<Message> findByConversationId(Long conversationId, Pageable pageable) {
         return messageRepository.findByConversationIdOrderBySentAtAsc(conversationId, pageable);
+    }
+
+    public List<Message> findBefore(Long conversationId, Long beforeId, int size) {
+        return messageRepository.findByConversationIdAndIdLessThanOrderByIdDesc(
+                conversationId, beforeId, PageRequest.of(0, size)).getContent();
     }
 
     public long countUnreadInConversationForUser(Long conversationId, Long userId) {

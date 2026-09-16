@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 
     private static final Pattern CONVERSATION_TOPIC = Pattern.compile("^/topic/conversations/(\\d+)$");
+    private static final Pattern CONVERSATION_TYPING_TOPIC = Pattern.compile("^/topic/conversations/(\\d+)/typing$");
     private static final Pattern NOTIFICATION_TOPIC = Pattern.compile("^/topic/notifications/(\\d+)$");
 
     private final ConversationDao conversationDao;
@@ -66,14 +67,13 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
 
             Matcher conversationMatcher = CONVERSATION_TOPIC.matcher(destination);
             if (conversationMatcher.matches()) {
-                Long conversationId = Long.valueOf(conversationMatcher.group(1));
-                Conversation conversation = conversationDao.findById(conversationId, true);
-                boolean participant = conversation != null
-                        && (userId.equals(conversation.getUserAId()) || userId.equals(conversation.getUserBId()));
-                if (!isAdmin && !participant) {
-                    log.warn("Rejected WS subscribe to {} by user {}", destination, userId);
-                    throw new MessagingException("Not a participant of this conversation");
-                }
+                assertParticipantOrAdmin(Long.valueOf(conversationMatcher.group(1)), userId, isAdmin, destination);
+                return message;
+            }
+
+            Matcher typingMatcher = CONVERSATION_TYPING_TOPIC.matcher(destination);
+            if (typingMatcher.matches()) {
+                assertParticipantOrAdmin(Long.valueOf(typingMatcher.group(1)), userId, isAdmin, destination);
                 return message;
             }
 
@@ -88,5 +88,15 @@ public class WebSocketAuthChannelInterceptor implements ChannelInterceptor {
         }
 
         return message;
+    }
+
+    private void assertParticipantOrAdmin(Long conversationId, Long userId, boolean isAdmin, String destination) {
+        Conversation conversation = conversationDao.findById(conversationId, true);
+        boolean participant = conversation != null
+                && (userId.equals(conversation.getUserAId()) || userId.equals(conversation.getUserBId()));
+        if (!isAdmin && !participant) {
+            log.warn("Rejected WS subscribe to {} by user {}", destination, userId);
+            throw new MessagingException("Not a participant of this conversation");
+        }
     }
 }

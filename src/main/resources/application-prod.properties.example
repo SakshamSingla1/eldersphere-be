@@ -13,3 +13,10 @@ spring.mail.username=CHANGE_ME
 spring.mail.password=CHANGE_ME
 
 jwt.secret=CHANGE_ME_BASE64_SECRET_MIN_32_CHARS
+
+# ===============================
+# PAYMENTS (Stripe) - get live keys at https://dashboard.stripe.com/test/apikeys
+# ===============================
+# stripe.secret-key=sk_live_CHANGE_ME
+# stripe.publishable-key=pk_live_CHANGE_ME
+# stripe.webhook-secret=whsec_CHANGE_ME

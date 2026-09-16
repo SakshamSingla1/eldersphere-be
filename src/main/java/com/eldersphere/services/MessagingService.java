@@ -14,9 +14,12 @@ public interface MessagingService {
 
     Page<ConversationResponse> getConversationsForUser(Long callerId, Pageable pageable) throws GenericException;
 
-    Page<MessageResponse> getMessages(Long callerId, Long conversationId, Pageable pageable) throws GenericException;
+    Page<MessageResponse> getMessages(Long callerId, Long conversationId, Long beforeId, Pageable pageable) throws GenericException;
 
     MessageResponse sendMessage(Long callerId, Long conversationId, MessageRequest request) throws GenericException;
 
     void markRead(Long callerId, Long conversationId) throws GenericException;
+
+    /** Used by {@code ChatWebSocketController} to reuse the REST access-control rule for STOMP-only interactions (e.g. typing events). */
+    boolean hasAccess(Long callerId, Long conversationId);
 }

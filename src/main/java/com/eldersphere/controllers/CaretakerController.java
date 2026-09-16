@@ -1,5 +1,6 @@
 package com.eldersphere.controllers;
 
+import com.eldersphere.dtos.Booking.AvailableSlotsResponse;
 import com.eldersphere.dtos.Caretaker.CaretakerAvailabilityRequest;
 import com.eldersphere.dtos.Caretaker.CaretakerAvailabilityResponse;
 import com.eldersphere.dtos.Caretaker.CaretakerProfileRequest;
@@ -9,6 +10,7 @@ import com.eldersphere.dtos.Caretaker.CaretakerVerificationUpdateRequest;
 import com.eldersphere.exceptions.GenericException;
 import com.eldersphere.payload.ApiResponse;
 import com.eldersphere.payload.ResponseModel;
+import com.eldersphere.services.BookingService;
 import com.eldersphere.services.CaretakerAvailabilityService;
 import com.eldersphere.services.CaretakerProfileService;
 import com.eldersphere.utils.Helper;
@@ -16,11 +18,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -31,6 +35,7 @@ public class CaretakerController {
 
     private final CaretakerProfileService caretakerProfileService;
     private final CaretakerAvailabilityService caretakerAvailabilityService;
+    private final BookingService bookingService;
     private final Helper helper;
 
     @Operation(summary = "Create or update my caretaker profile", description = "Called by a logged-in CARETAKER user to create or update their own profile.")
@@ -102,5 +107,14 @@ public class CaretakerController {
     @GetMapping("/{id}/availability")
     public ResponseEntity<ResponseModel<CaretakerAvailabilityResponse>> getAvailability(@PathVariable Long id) throws GenericException {
         return ApiResponse.successResponse(caretakerAvailabilityService.getByCaretakerId(id), "Availability fetched successfully");
+    }
+
+    @Operation(summary = "Get a caretaker's available booking slots for a date", description = "Public - used by family members browsing/booking a caretaker. Generates candidate slots for the given service's duration across the caretaker's declared weekly availability (or a default 07:00-20:00 window if none is declared) and flags each as available/unavailable against their existing bookings that day.")
+    @GetMapping("/{id}/available-slots")
+    public ResponseEntity<ResponseModel<AvailableSlotsResponse>> getAvailableSlots(
+            @PathVariable Long id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam Long serviceId) throws GenericException {
+        return ApiResponse.successResponse(bookingService.getAvailableSlots(id, date, serviceId), "Available slots fetched successfully");
     }
 }

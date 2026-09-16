@@ -97,6 +97,10 @@ public class SecurityConfig {
                                 "/api/v1/push/vapid-public-key"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/contact-us").permitAll()
+                        // Called by Stripe, not by a logged-in client - Webhook.constructEvent verifies
+                        // the Stripe-Signature header against the raw body itself, so this must be
+                        // reachable without a JWT (see PaymentController#webhook / PaymentServiceImpl).
+                        .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

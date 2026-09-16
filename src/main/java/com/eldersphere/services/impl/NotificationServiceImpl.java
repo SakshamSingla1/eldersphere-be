@@ -37,7 +37,8 @@ public class NotificationServiceImpl implements NotificationService {
     // of the always-created IN_APP delivery log. Real provider integration (Twilio/SendGrid)
     // is out of scope for this MVP — see NotificationChannelEnum.
     private static final Set<NotificationTypeEnum> MULTI_CHANNEL_TYPES =
-            Set.of(NotificationTypeEnum.EMERGENCY_ALERT, NotificationTypeEnum.BOOKING_CONFIRMED);
+            Set.of(NotificationTypeEnum.EMERGENCY_ALERT, NotificationTypeEnum.BOOKING_CONFIRMED,
+                    NotificationTypeEnum.PAYMENT_RECEIVED, NotificationTypeEnum.PAYMENT_FAILED);
 
     // Defaults applied to a (user, type) combination with no NotificationPreference row yet -
     // see NotificationPreferenceServiceImpl, which these must stay in sync with.

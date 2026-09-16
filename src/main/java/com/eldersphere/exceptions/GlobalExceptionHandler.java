@@ -45,7 +45,11 @@ public class GlobalExceptionHandler {
             ExceptionCodeEnum.CANNOT_DELETE_DEFAULT_COLOR_THEME,
             ExceptionCodeEnum.COLOR_THEME_INACTIVE,
             ExceptionCodeEnum.INVITE_ALREADY_RESPONDED,
-            ExceptionCodeEnum.INVALID_INVITE_ROLE
+            ExceptionCodeEnum.INVALID_INVITE_ROLE,
+            ExceptionCodeEnum.PAYMENT_GATEWAY_NOT_CONFIGURED,
+            ExceptionCodeEnum.BOOKING_NOT_PAYABLE,
+            ExceptionCodeEnum.PAYMENT_NOT_REFUNDABLE,
+            ExceptionCodeEnum.WEBHOOK_SIGNATURE_INVALID
     );
 
     private static final Set<ExceptionCodeEnum> CONFLICT_CODES = Set.of(
@@ -64,7 +68,8 @@ public class GlobalExceptionHandler {
             ExceptionCodeEnum.PRIMARY_USER_ROLE_CANNOT_BE_REVOKED,
             ExceptionCodeEnum.DUPLICATE_INVITE,
             ExceptionCodeEnum.ELDER_ALREADY_LINKED,
-            ExceptionCodeEnum.FAMILY_MEMBER_ALREADY_LINKED
+            ExceptionCodeEnum.FAMILY_MEMBER_ALREADY_LINKED,
+            ExceptionCodeEnum.PAYMENT_ALREADY_SUCCEEDED
     );
 
     private static final Set<ExceptionCodeEnum> NOT_FOUND_CODES = Set.of(
@@ -93,7 +98,8 @@ public class GlobalExceptionHandler {
             ExceptionCodeEnum.REVIEW_REPLY_NOT_FOUND,
             ExceptionCodeEnum.FAVORITE_CARETAKER_NOT_FOUND,
             ExceptionCodeEnum.USER_ROLE_NOT_ASSIGNED,
-            ExceptionCodeEnum.ELDER_PROFILE_LINK_INVITE_NOT_FOUND
+            ExceptionCodeEnum.ELDER_PROFILE_LINK_INVITE_NOT_FOUND,
+            ExceptionCodeEnum.PAYMENT_NOT_FOUND
     );
 
     @ExceptionHandler(GenericException.class)

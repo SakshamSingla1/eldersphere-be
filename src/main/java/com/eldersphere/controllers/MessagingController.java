@@ -46,13 +46,15 @@ public class MessagingController {
         return ApiResponse.successResponse(messagingService.getConversationsForUser(callerId, pageable), "Conversations fetched successfully");
     }
 
-    @Operation(summary = "List messages in a conversation", description = "Paged, oldest first. Only the two participants (or an admin) may access this.")
+    @Operation(summary = "List messages in a conversation", description = "Paged, oldest first. Only the two participants (or an admin) may access this. Pass beforeId (a message id) instead of page/size to cursor-load the messages immediately preceding it, for infinite-scroll \"load older\".")
     @GetMapping("/{id}/messages")
     public ResponseEntity<ResponseModel<Page<MessageResponse>>> getMessages(
             @RequestHeader(value = "Authorization", required = false) String auth,
-            @PathVariable Long id, Pageable pageable) throws GenericException {
+            @PathVariable Long id,
+            @RequestParam(required = false) Long beforeId,
+            Pageable pageable) throws GenericException {
         Long callerId = helper.getUserIdFromHeader(auth);
-        return ApiResponse.successResponse(messagingService.getMessages(callerId, id, pageable), "Messages fetched successfully");
+        return ApiResponse.successResponse(messagingService.getMessages(callerId, id, beforeId, pageable), "Messages fetched successfully");
     }
 
     @Operation(summary = "Send a message", description = "Persists the message, broadcasts it to /topic/conversations/{id}, and notifies the other participant.")

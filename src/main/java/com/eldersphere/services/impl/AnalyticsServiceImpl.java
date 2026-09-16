@@ -2,9 +2,15 @@ package com.eldersphere.services.impl;
 
 import com.eldersphere.dao.booking.BookingDao;
 import com.eldersphere.dao.caretaker.CaretakerProfileDao;
+import com.eldersphere.dao.payment.PaymentDao;
+import com.eldersphere.dao.review.ReviewDao;
 import com.eldersphere.dtos.Analytics.BookingTimeseriesPointDTO;
+import com.eldersphere.dtos.Analytics.CaretakerBookingsRatingTrendDTO;
 import com.eldersphere.dtos.Analytics.CaretakerLeaderboardEntryDTO;
+import com.eldersphere.dtos.Analytics.FamilySpendingSummaryDTO;
+import com.eldersphere.dtos.Analytics.RatingTrendPointDTO;
 import com.eldersphere.dtos.Analytics.RevenueTimeseriesPointDTO;
+import com.eldersphere.entities.CaretakerProfile;
 import com.eldersphere.enums.ExceptionCodeEnum;
 import com.eldersphere.exceptions.GenericException;
 import com.eldersphere.services.AnalyticsService;
@@ -29,6 +35,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     private final BookingDao bookingDao;
     private final CaretakerProfileDao caretakerProfileDao;
+    private final PaymentDao paymentDao;
+    private final ReviewDao reviewDao;
 
     @Override
     public List<BookingTimeseriesPointDTO> getBookingTimeseries(LocalDate start, LocalDate end, String granularity) throws GenericException {
@@ -91,6 +99,79 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .sorted(comparator)
                 .limit(cappedLimit)
                 .toList();
+    }
+
+    @Override
+    public FamilySpendingSummaryDTO getMyFamilySpending(Long familyUserId) throws GenericException {
+        List<RevenueTimeseriesPointDTO> spendingOverTime = paymentDao.monthlySpendingRaw(familyUserId).stream()
+                .map(row -> RevenueTimeseriesPointDTO.builder()
+                        .bucketStart(toLocalDate(row[0]))
+                        .revenue((BigDecimal) row[1])
+                        .build())
+                .sorted(Comparator.comparing(RevenueTimeseriesPointDTO::getBucketStart))
+                .toList();
+
+        Map<String, Long> bookingsByStatus = new LinkedHashMap<>();
+        for (Object[] row : bookingDao.bookingStatusCountsForFamilyUser(familyUserId)) {
+            bookingsByStatus.put(String.valueOf(row[0]), ((Number) row[1]).longValue());
+        }
+
+        return FamilySpendingSummaryDTO.builder()
+                .spendingOverTime(spendingOverTime)
+                .bookingsByStatus(bookingsByStatus)
+                .build();
+    }
+
+    @Override
+    public List<RevenueTimeseriesPointDTO> getMyCaretakerEarnings(Long callerUserId) throws GenericException {
+        CaretakerProfile profile = resolveCaretakerProfile(callerUserId);
+        return paymentDao.monthlyEarningsRaw(profile.getId()).stream()
+                .map(row -> RevenueTimeseriesPointDTO.builder()
+                        .bucketStart(toLocalDate(row[0]))
+                        .revenue((BigDecimal) row[1])
+                        .build())
+                .sorted(Comparator.comparing(RevenueTimeseriesPointDTO::getBucketStart))
+                .toList();
+    }
+
+    @Override
+    public CaretakerBookingsRatingTrendDTO getMyCaretakerBookingsRatingTrend(Long callerUserId) throws GenericException {
+        CaretakerProfile profile = resolveCaretakerProfile(callerUserId);
+
+        Map<LocalDate, Map<String, Long>> byBucket = new LinkedHashMap<>();
+        for (Object[] row : bookingDao.weeklyCompletedBookingsRaw(profile.getId())) {
+            LocalDate bucket = toLocalDate(row[0]);
+            String status = String.valueOf(row[1]);
+            long count = ((Number) row[2]).longValue();
+            byBucket.computeIfAbsent(bucket, k -> new LinkedHashMap<>()).put(status, count);
+        }
+        List<BookingTimeseriesPointDTO> bookingsPerWeek = byBucket.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(e -> BookingTimeseriesPointDTO.builder()
+                        .bucketStart(e.getKey())
+                        .total(e.getValue().values().stream().mapToLong(Long::longValue).sum())
+                        .byStatus(e.getValue())
+                        .build())
+                .toList();
+
+        List<RatingTrendPointDTO> ratingTrend = reviewDao.ratingTrendRaw(profile.getId()).stream()
+                .map(row -> RatingTrendPointDTO.builder()
+                        .bucketStart(toLocalDate(row[0]))
+                        .averageRating(row[1] != null ? ((Number) row[1]).doubleValue() : null)
+                        .reviewCount(((Number) row[2]).longValue())
+                        .build())
+                .sorted(Comparator.comparing(RatingTrendPointDTO::getBucketStart))
+                .toList();
+
+        return CaretakerBookingsRatingTrendDTO.builder()
+                .bookingsPerWeek(bookingsPerWeek)
+                .ratingTrend(ratingTrend)
+                .build();
+    }
+
+    private CaretakerProfile resolveCaretakerProfile(Long callerUserId) throws GenericException {
+        return caretakerProfileDao.findByUserId(callerUserId)
+                .orElseThrow(() -> new GenericException(ExceptionCodeEnum.CARETAKER_PROFILE_NOT_FOUND, "Caretaker profile not found"));
     }
 
     private String validateRange(LocalDate start, LocalDate end, String granularity) throws GenericException {

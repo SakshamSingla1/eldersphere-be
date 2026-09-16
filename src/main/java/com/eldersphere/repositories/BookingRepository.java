@@ -92,4 +92,25 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Object[]> revenueTimeseriesRaw(@Param("unit") String unit,
                                          @Param("start") LocalDate start,
                                          @Param("end") LocalDate end);
+
+    /**
+     * Row shape: [status (String), count (Long)]. All-time, for one family user's own bookings.
+     */
+    @Query("SELECT b.status, COUNT(b) FROM Booking b WHERE b.familyUserId = :familyUserId GROUP BY b.status")
+    List<Object[]> bookingStatusCountsForFamilyUser(@Param("familyUserId") Long familyUserId);
+
+    /**
+     * Row shape: [bucket_date (java.sql.Date), status (String), count (Long)]. All-time,
+     * COMPLETED bookings only, for one caretaker.
+     */
+    @Query(value = """
+            SELECT CAST(date_trunc('week', b.scheduled_date::timestamp) AS date) AS bucket,
+                   b.status AS status,
+                   COUNT(*) AS cnt
+            FROM bookings b
+            WHERE b.caretaker_id = :caretakerId AND b.status = 'COMPLETED'
+            GROUP BY bucket, b.status
+            ORDER BY bucket
+            """, nativeQuery = true)
+    List<Object[]> weeklyCompletedBookingsRaw(@Param("caretakerId") Long caretakerId);
 }

@@ -1,12 +1,15 @@
 package com.eldersphere.controllers;
 
 import com.eldersphere.dtos.Analytics.BookingTimeseriesPointDTO;
+import com.eldersphere.dtos.Analytics.CaretakerBookingsRatingTrendDTO;
 import com.eldersphere.dtos.Analytics.CaretakerLeaderboardEntryDTO;
+import com.eldersphere.dtos.Analytics.FamilySpendingSummaryDTO;
 import com.eldersphere.dtos.Analytics.RevenueTimeseriesPointDTO;
 import com.eldersphere.exceptions.GenericException;
 import com.eldersphere.payload.ApiResponse;
 import com.eldersphere.payload.ResponseModel;
 import com.eldersphere.services.AnalyticsService;
+import com.eldersphere.utils.Helper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ import java.util.List;
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;
+    private final Helper helper;
 
     @Operation(summary = "Bookings time-series", description = "Count of bookings per day/week (broken down by status) over a date range, based on scheduled_date.")
     @GetMapping("/bookings-timeseries")
@@ -51,5 +55,32 @@ public class AnalyticsController {
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(defaultValue = "RATING") String sortBy) throws GenericException {
         return ApiResponse.successResponse(analyticsService.getCaretakerLeaderboard(limit, sortBy), "Caretaker leaderboard fetched successfully");
+    }
+
+    @Operation(summary = "My spending over time (family)", description = "Self-scoped: monthly total of SUCCEEDED payments for the calling family member's own bookings, all-time, plus a current bookings-by-status breakdown.")
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/family-spending")
+    public ResponseEntity<ResponseModel<FamilySpendingSummaryDTO>> getMyFamilySpending(
+            @RequestHeader(value = "Authorization", required = false) String auth) throws GenericException {
+        Long familyUserId = helper.getUserIdFromHeader(auth);
+        return ApiResponse.successResponse(analyticsService.getMyFamilySpending(familyUserId), "Family spending fetched successfully");
+    }
+
+    @Operation(summary = "My earnings over time (caretaker)", description = "Self-scoped: monthly total of SUCCEEDED payments for the calling caretaker's own bookings, all-time. Resolves the caretaker profile from the JWT the same way GET /payments/me/earnings does.")
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/caretaker-earnings")
+    public ResponseEntity<ResponseModel<List<RevenueTimeseriesPointDTO>>> getMyCaretakerEarnings(
+            @RequestHeader(value = "Authorization", required = false) String auth) throws GenericException {
+        Long userId = helper.getUserIdFromHeader(auth);
+        return ApiResponse.successResponse(analyticsService.getMyCaretakerEarnings(userId), "Caretaker earnings fetched successfully");
+    }
+
+    @Operation(summary = "My bookings-per-week and rating trend (caretaker)", description = "Self-scoped: weekly count of the calling caretaker's own COMPLETED bookings, all-time, plus their average review rating per month.")
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/caretaker-bookings-rating-trend")
+    public ResponseEntity<ResponseModel<CaretakerBookingsRatingTrendDTO>> getMyCaretakerBookingsRatingTrend(
+            @RequestHeader(value = "Authorization", required = false) String auth) throws GenericException {
+        Long userId = helper.getUserIdFromHeader(auth);
+        return ApiResponse.successResponse(analyticsService.getMyCaretakerBookingsRatingTrend(userId), "Caretaker bookings and rating trend fetched successfully");
     }
 }

@@ -29,7 +29,7 @@ public class Message extends Auditable {
     @Column(name = "sender_id", nullable = false)
     private Long senderId;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "sent_at", nullable = false)
@@ -37,4 +37,10 @@ public class Message extends Auditable {
 
     @Column(name = "read_at")
     private LocalDateTime readAt;
+
+    @Column(name = "file_asset_id")
+    private Long fileAssetId;
+
+    @Column(name = "file_url", length = 500)
+    private String fileUrl;
 }

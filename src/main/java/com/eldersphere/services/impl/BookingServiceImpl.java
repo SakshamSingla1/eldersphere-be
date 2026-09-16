@@ -6,6 +6,8 @@ import com.eldersphere.dao.caretaker.CaretakerProfileDao;
 import com.eldersphere.dao.elder.ElderProfileDao;
 import com.eldersphere.dao.service.ServiceOfferingDao;
 import com.eldersphere.dao.user.UserDao;
+import com.eldersphere.dtos.Booking.AvailableSlotResponse;
+import com.eldersphere.dtos.Booking.AvailableSlotsResponse;
 import com.eldersphere.dtos.Booking.BookingRequest;
 import com.eldersphere.dtos.Booking.BookingResponse;
 import com.eldersphere.entities.Booking;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -173,13 +176,73 @@ public class BookingServiceImpl implements BookingService {
                     ? existingService.getDurationMinutes() : DEFAULT_DURATION_MINUTES;
             LocalTime existingEnd = existing.getScheduledTime().plusMinutes(existingDuration);
 
-            boolean overlaps = startTime.isBefore(existingEnd) && existing.getScheduledTime().isBefore(endTime);
-            if (overlaps) {
+            if (overlaps(startTime, endTime, existing.getScheduledTime(), existingEnd)) {
                 throw new GenericException(ExceptionCodeEnum.BOOKING_CONFLICT,
                         "This caretaker already has a booking overlapping " + startTime + "-" + endTime
                                 + " on " + date + occurrenceLabel);
             }
         }
+    }
+
+    private boolean overlaps(LocalTime aStart, LocalTime aEnd, LocalTime bStart, LocalTime bEnd) {
+        return aStart.isBefore(bEnd) && bStart.isBefore(aEnd);
+    }
+
+    @Override
+    public AvailableSlotsResponse getAvailableSlots(Long caretakerId, LocalDate date, Long serviceId) throws GenericException {
+        ServiceOffering service = serviceOfferingDao.findById(serviceId, true);
+        if (service == null) {
+            throw new GenericException(ExceptionCodeEnum.SERVICE_OFFERING_NOT_FOUND, "Service offering not found");
+        }
+        int durationMinutes = service.getDurationMinutes() != null ? service.getDurationMinutes() : DEFAULT_DURATION_MINUTES;
+
+        DayOfWeekEnum dayOfWeek = DayOfWeekEnum.valueOf(date.getDayOfWeek().name());
+        List<CaretakerAvailability> declaredSlots = caretakerAvailabilityDao.findByCaretakerId(caretakerId);
+        boolean usingDefaultHours = declaredSlots.isEmpty();
+
+        List<CaretakerAvailability> windows = usingDefaultHours
+                ? List.of(CaretakerAvailability.builder()
+                        .caretakerId(caretakerId).dayOfWeek(dayOfWeek)
+                        .startTime(LocalTime.of(7, 0)).endTime(LocalTime.of(20, 0)).build())
+                : declaredSlots.stream().filter(slot -> slot.getDayOfWeek() == dayOfWeek).toList();
+
+        List<Booking> existingBookings = bookingDao.findByCaretakerIdAndDateAndStatuses(caretakerId, date, ACTIVE_STATUSES);
+
+        List<AvailableSlotResponse> slots = new ArrayList<>();
+        for (CaretakerAvailability window : windows) {
+            for (int minuteOfDay = 0; minuteOfDay < 24 * 60; minuteOfDay += 30) {
+                LocalTime slotStart = LocalTime.MIDNIGHT.plusMinutes(minuteOfDay);
+                if (slotStart.isBefore(window.getStartTime())) {
+                    continue;
+                }
+                LocalTime slotEnd = slotStart.plusMinutes(durationMinutes);
+                if (slotEnd.isBefore(slotStart) || slotEnd.isAfter(window.getEndTime())) {
+                    continue;
+                }
+
+                boolean conflicts = existingBookings.stream().anyMatch(existing -> {
+                    ServiceOffering existingService = serviceOfferingDao.findById(existing.getServiceId(), true);
+                    int existingDuration = (existingService != null && existingService.getDurationMinutes() != null)
+                            ? existingService.getDurationMinutes() : DEFAULT_DURATION_MINUTES;
+                    LocalTime existingEnd = existing.getScheduledTime().plusMinutes(existingDuration);
+                    return overlaps(slotStart, slotEnd, existing.getScheduledTime(), existingEnd);
+                });
+
+                AvailableSlotResponse slot = new AvailableSlotResponse();
+                slot.setStartTime(slotStart);
+                slot.setEndTime(slotEnd);
+                slot.setAvailable(!conflicts);
+                slots.add(slot);
+            }
+        }
+        slots.sort(Comparator.comparing(AvailableSlotResponse::getStartTime));
+
+        AvailableSlotsResponse response = new AvailableSlotsResponse();
+        response.setCaretakerId(caretakerId);
+        response.setDate(date);
+        response.setUsingDefaultHours(usingDefaultHours);
+        response.setSlots(slots);
+        return response;
     }
 
     @Override

@@ -98,4 +98,12 @@ public class BookingDao implements IDao<Booking, Long> {
     public List<Object[]> revenueTimeseriesRaw(String unit, LocalDate start, LocalDate end) {
         return bookingRepository.revenueTimeseriesRaw(unit, start, end);
     }
+
+    public List<Object[]> bookingStatusCountsForFamilyUser(Long familyUserId) {
+        return bookingRepository.bookingStatusCountsForFamilyUser(familyUserId);
+    }
+
+    public List<Object[]> weeklyCompletedBookingsRaw(Long caretakerId) {
+        return bookingRepository.weeklyCompletedBookingsRaw(caretakerId);
+    }
 }

@@ -45,4 +45,8 @@ public class ReviewDao implements IDao<Review, Long> {
     public Double findAverageRatingByCaretakerId(Long caretakerId) {
         return reviewRepository.findAverageRatingByCaretakerId(caretakerId);
     }
+
+    public java.util.List<Object[]> ratingTrendRaw(Long caretakerId) {
+        return reviewRepository.ratingTrendRaw(caretakerId);
+    }
 }

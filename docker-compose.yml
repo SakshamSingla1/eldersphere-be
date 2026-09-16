@@ -43,6 +43,11 @@ services:
       JWT_SECRET: ${JWT_SECRET:-QmmT91Hz/6m0dOZQYJt645GtdxQnJ+yr9DEj3yj6OrI=}
       APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:5174,http://localhost:5173,http://localhost:3000}
       APP_URL: ${APP_URL:-http://localhost:8080}
+      # No default - Stripe stays unconfigured (payments fail clearly, never silently
+      # succeed) unless explicitly opted into via the host environment.
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
     ports:
       - "8080:8080"
     volumes:

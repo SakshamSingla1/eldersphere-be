@@ -1,11 +1,12 @@
 package com.eldersphere.dtos.Messaging;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class MessageRequest {
 
-    @NotBlank(message = "Message content is required")
     private String content;
+
+    /** Optional: id of a previously uploaded file (via /api/v1/files) to attach to this message. */
+    private Long fileAssetId;
 }

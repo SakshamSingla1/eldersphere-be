@@ -25,3 +25,10 @@ spring.mail.password=CHANGE_ME_APP_PASSWORD
 # ===============================
 jwt.secret=CHANGE_ME_BASE64_SECRET_MIN_32_CHARS
 jwt.access-token.expiration=36000000
+
+# ===============================
+# PAYMENTS (Stripe) - get test keys at https://dashboard.stripe.com/test/apikeys
+# ===============================
+# stripe.secret-key=sk_test_CHANGE_ME
+# stripe.publishable-key=pk_test_CHANGE_ME
+# stripe.webhook-secret=whsec_CHANGE_ME

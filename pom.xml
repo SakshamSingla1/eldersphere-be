@@ -184,6 +184,13 @@
 			<artifactId>bucket4j-core</artifactId>
 			<version>7.6.0</version>
 		</dependency>
+		<!-- Payments (Stripe PaymentIntents + webhook signature verification) - see
+			 com.eldersphere.config.StripeConfig. No-ops safely when stripe.secret-key is unset. -->
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>29.2.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

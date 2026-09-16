@@ -13,4 +13,6 @@ public class MessageResponse {
     private String content;
     private LocalDateTime sentAt;
     private LocalDateTime readAt;
+    private Long fileAssetId;
+    private String fileUrl;
 }

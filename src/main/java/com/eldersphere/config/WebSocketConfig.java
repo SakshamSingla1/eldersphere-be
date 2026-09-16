@@ -20,8 +20,13 @@ import java.util.List;
  * {@link WebSocketAuthChannelInterceptor} for per-topic subscription authorization.
  *
  * Topics:
- *  - /topic/conversations/{conversationId} — new messages in that conversation
- *  - /topic/notifications/{userId}         — new notifications for that user
+ *  - /topic/conversations/{conversationId}         — new messages in that conversation
+ *  - /topic/conversations/{conversationId}/typing  — typing indicator events for that conversation
+ *  - /topic/notifications/{userId}                 — new notifications for that user
+ *  - /topic/presence                               — online/offline events for any user
+ *
+ * Application destinations (client publishes to, under the /app prefix below):
+ *  - /app/conversations/{conversationId}/typing — {"typing": true|false}, see ChatWebSocketController
  */
 @Configuration
 @EnableWebSocketMessageBroker
