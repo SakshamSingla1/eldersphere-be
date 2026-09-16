@@ -191,6 +191,13 @@
 			<artifactId>stripe-java</artifactId>
 			<version>29.2.0</version>
 		</dependency>
+		<!-- File storage (Cloudinary) - see com.eldersphere.config.CloudinaryConfig and
+			 FileStorageServiceImpl. Falls back to local disk when unconfigured. -->
+		<dependency>
+			<groupId>com.cloudinary</groupId>
+			<artifactId>cloudinary-http44</artifactId>
+			<version>1.39.0</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

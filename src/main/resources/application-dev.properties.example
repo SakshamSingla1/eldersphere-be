@@ -32,3 +32,11 @@ jwt.access-token.expiration=36000000
 # stripe.secret-key=sk_test_CHANGE_ME
 # stripe.publishable-key=pk_test_CHANGE_ME
 # stripe.webhook-secret=whsec_CHANGE_ME
+
+# ===============================
+# FILE STORAGE (Cloudinary) - get credentials at https://console.cloudinary.com - leave
+# commented to keep using local disk storage.
+# ===============================
+# cloudinary.cloud-name=CHANGE_ME
+# cloudinary.api-key=CHANGE_ME
+# cloudinary.api-secret=CHANGE_ME

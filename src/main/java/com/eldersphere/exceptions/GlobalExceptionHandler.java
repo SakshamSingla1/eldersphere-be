@@ -49,7 +49,8 @@ public class GlobalExceptionHandler {
             ExceptionCodeEnum.PAYMENT_GATEWAY_NOT_CONFIGURED,
             ExceptionCodeEnum.BOOKING_NOT_PAYABLE,
             ExceptionCodeEnum.PAYMENT_NOT_REFUNDABLE,
-            ExceptionCodeEnum.WEBHOOK_SIGNATURE_INVALID
+            ExceptionCodeEnum.WEBHOOK_SIGNATURE_INVALID,
+            ExceptionCodeEnum.FILE_TYPE_NOT_ALLOWED
     );
 
     private static final Set<ExceptionCodeEnum> CONFLICT_CODES = Set.of(

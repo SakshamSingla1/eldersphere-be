@@ -110,6 +110,7 @@ public enum ExceptionCodeEnum {
     // ==== FILE ====
     FILE_NOT_FOUND("FILE_NOT_FOUND"),
     FILE_STORAGE_FAILED("FILE_STORAGE_FAILED"),
+    FILE_TYPE_NOT_ALLOWED("FILE_TYPE_NOT_ALLOWED"),
 
     // ==== VALIDATION / INPUT ====
     BAD_REQUEST("BAD_REQUEST"),

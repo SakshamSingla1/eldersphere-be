@@ -18,14 +18,14 @@ import org.springframework.web.multipart.MultipartFile;
 @PreAuthorize("isAuthenticated()")
 @RestController
 @RequestMapping("/api/v1/files")
-@Tag(name = "Files", description = "Local-disk file uploads (caretaker photos, medical record documents) served from /uploads/**")
+@Tag(name = "Files", description = "File uploads (images, PDF, Word, Excel, video) - stored on Cloudinary when configured, otherwise on local disk served from /uploads/**")
 @RequiredArgsConstructor
 public class FileController {
 
     private final FileAssetService fileAssetService;
     private final Helper helper;
 
-    @Operation(summary = "Upload a file", description = "Stores the file on local disk and returns its public URL and metadata.")
+    @Operation(summary = "Upload a file", description = "Stores an image, PDF, Word, Excel, or video file (Cloudinary when configured, otherwise local disk) and returns its public URL and metadata.")
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<ResponseModel<FileAssetResponse>> upload(
             @RequestHeader(value = "Authorization", required = false) String auth,

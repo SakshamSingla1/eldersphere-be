@@ -1,18 +1,25 @@
 package com.eldersphere.services;
 
+import com.eldersphere.enums.ResourceTypeEnum;
 import com.eldersphere.exceptions.GenericException;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface FileStorageService {
 
     /**
-     * Saves the file to local disk under the configured upload directory and returns
-     * the relative path it was stored at (e.g. "2026/09/uuid.jpg").
+     * Result of a store() call: {@code path} is an opaque key this service later needs back
+     * for {@link #delete}, and {@code url} is the publicly-reachable download URL to persist
+     * on the {@code FileAsset} row.
      */
-    String store(MultipartFile file) throws GenericException;
+    record StoredFile(String path, String url) {}
 
-    /** Builds the publicly-reachable URL for a previously stored relative path. */
-    String buildPublicUrl(String relativePath);
+    /**
+     * Stores the file - on Cloudinary when configured (see CloudinaryConfig), otherwise on
+     * local disk under the configured upload directory - organized under a
+     * {@code resourceType}-named folder either way.
+     */
+    StoredFile store(MultipartFile file, ResourceTypeEnum resourceType) throws GenericException;
 
-    void delete(String relativePath);
+    /** Deletes a previously stored file, given the {@code path} its store() call returned. */
+    void delete(String path);
 }

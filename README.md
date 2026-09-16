@@ -161,11 +161,13 @@ simplified, and why:
   enum for a future email-verification flow, but self-registration currently activates
   accounts immediately.
 - **Email change flow dropped** for the same reason (it depended on the OTP infrastructure above).
-- **Cloudinary → local disk.** File uploads are stored under `app.file-storage.upload-dir`
-  (default `uploads/`) and served via a Spring `ResourceHandler` at `/uploads/**`, instead of
-  the reference project's Cloudinary SDK integration. This removes an external service
-  dependency for local development and this MVP's scope; swapping in S3/Cloudinary later only
-  touches `FileStorageServiceImpl`.
+- **Cloudinary, with a local-disk fallback.** File uploads go to Cloudinary (images, PDFs,
+  Word/Excel documents, and video - see `FileAssetServiceImpl`'s MIME-type allowlist) when
+  `cloudinary.cloud-name`/`api-key`/`api-secret` are configured; left blank, uploads
+  transparently fall back to local disk under `app.file-storage.upload-dir` (default
+  `uploads/`), served via a Spring `ResourceHandler` at `/uploads/**`. Both paths live in
+  `FileStorageServiceImpl` behind one `FileStorageService` interface, so no other file-upload
+  code needs to know or care which backend is active.
 - **Blog, Resume, GitHub integration, Publication, TestimonialRequestLink dropped** — these are
   portfolio-builder-specific content modules (blog posts, resume PDF export/download tracking,
   GitHub OAuth + repo stats, academic publications, testimonial-request magic links) with no

@@ -20,3 +20,10 @@ jwt.secret=CHANGE_ME_BASE64_SECRET_MIN_32_CHARS
 # stripe.secret-key=sk_live_CHANGE_ME
 # stripe.publishable-key=pk_live_CHANGE_ME
 # stripe.webhook-secret=whsec_CHANGE_ME
+
+# ===============================
+# FILE STORAGE (Cloudinary) - get credentials at https://console.cloudinary.com
+# ===============================
+cloudinary.cloud-name=CHANGE_ME
+cloudinary.api-key=CHANGE_ME
+cloudinary.api-secret=CHANGE_ME
